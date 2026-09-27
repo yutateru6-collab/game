@@ -107,3 +107,15 @@
 - Atlas/backdrop visually inspected. Reuses local Three.js; road stripes instanced; render DPR capped at 1.5. No external scripts or runtime wordbook mutations.
 - Browser preview access was blocked earlier by browser URL policy, so no alternate browser workaround was used. WebGL raster appearance, actual iPhone touch feel/audio/FPS are NOT verified. Automated tests are engine/controller/math checks only.
 - Public GitHub publishing uses explicit code/assets allowlist and excludes private wordbook catalogue.
+
+## Kart defect repair after user play report (2026-09-27)
+Reproduced in code/scene math, not an iPhone browser:
+- Hairpin centrifugal drift at 48 units/s reached 16.06 units/s against maximum normal steering 6.5. Capped outward force at 3.2 and smoothed steering; added full-inside-steering regression at the affected location after prior gates are consumed.
+- Yellow boundary strip was below asphalt. Several flat boost pads crossed uphill asphalt (up to ~0.10 units). Raised markings and aligned pads/dashes/grid/oil/shadows to local track slope. Actual KartView scene raycasts now check pad corners, yellow edges and road visibility around the circuit.
+- Sprite center/height placed tire bottoms below road. Bottom-anchored racers, adjusted size/height/roll, and widened lateral collision threshold to match visible kart width.
+- Context loss at intro did not open recovery and left Start apparently usable. Added recovery panel at all phases, guarded render exceptions, and delayed restore until Three.js internal context restore listeners complete. Added intro-loss/restoration and running-render-failure DOM-controller regressions.
+- Pointer capture failure could leave a held control when released outside the button. Added window release/cancel fallback and regression. Minute-boundary formatting no longer prints 0:60.0.
+- Lowered stage size for safe-area/short in-app viewports; respond to visualViewport changes. Stop redrawing a static scene on every frame while answering or paused. These layout/GPU-load changes are not measured on an actual phone.
+Validation: `test-kart-scene.mjs` executes the production scene construction/load/render path using real Three.js objects, substituting only the GPU device/text canvas. Checks 6 atlas regions, 45 pickups, 2000 smoothed camera updates, replay, pad corners and wheel baseline. It is NOT rasterization/WebGL visual QA.
+Engine/controller/camera tests pass, including a full 9-question race and review. Existing tank journey/input, memory, bomb, factory/maze, smooth maze, fishing, home, reward and private-book parsing regressions also pass. Original wordbook data untouched.
+Browser preview service reported stopped; prior browser URL-policy denial remains a boundary, no alternate browser or indirect rendering route used. User's exact on-device symptom is still unconfirmed; a short screen recording is needed to match their report rather than assume these were all their issues.

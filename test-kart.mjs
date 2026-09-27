@@ -12,3 +12,7 @@ const wrong=fresh();drive(wrong,60,false);assert.equal(wrong.correct,0);assert.e
 // Small vocabulary deck and delayed retry: never undefined, valid choices, repeats after at least two questions.
 for(const rng of[()=>0,()=>.42,()=>.999]){g=new KartGame(pack.slice(0,4),{random:rng});const seen=[];for(let i=0;i<9;i++){g.ask();assert.ok(g.pair);assert.equal(g.options.length,4);const word=g.pair.word;assert.ok(!seen.slice(-2).includes(word),'retry spaced by 2 questions');seen.push(word);g.answer(g.options.findIndex(p=>p.word!==word));g.continue();}}
 console.log('PASS 3-lap/9-gate race at 30/60/120Hz; all-car quiz pause; input clearing; drift tiers; item guards; ranking; word boost impact; delayed retries; reverse review; terminal/reward protection.');console.log(JSON.stringify({correct:wins,wrong:{rank:wrong.finishedRank,time:wrong.time}},null,2));
+
+// Regression: boosted hairpin must remain steerable (old centrifugal force reached 16 vs steering 6.5).
+{const g=fresh();g.distance=782.8;g.gate=3;g.lateral=0;g.speed=48;g.boost=10;g.input(-1);for(let i=0;i<60;i++)g.tick(1/120);assert.ok(g.lateral<0,'full inside steering must beat the outward force even during boost');}
+console.log('PASS boosted-hairpin control regression.');
