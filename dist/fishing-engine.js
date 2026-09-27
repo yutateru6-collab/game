@@ -1,20 +1,32 @@
 import {uniquePairs} from './memory-engine.js';
-export const FISH=[{name:'ソーダフィッシュ',icon:'🐟',size:24},{name:'サンゴバタフライ',icon:'🐠',size:35},{name:'まんまるフグ',icon:'🐡',size:42},{name:'ブルーセイル',icon:'🐟',size:88},{name:'王冠ゴールデン',icon:'🐠',size:120}];
+export const FISH=[
+ {id:0,name:'ソーダフィッシュ',size:24,rank:'ノーマル',points:20,hard:.8,period:4.4,rush:1.2},
+ {id:1,name:'サンゴバタフライ',size:35,rank:'レア',points:35,hard:1,period:4.1,rush:1.4},
+ {id:2,name:'まんまるフグ',size:42,rank:'レア',points:45,hard:1.1,period:3.5,rush:1.3},
+ {id:3,name:'ブルーセイル',size:88,rank:'スーパーレア',points:70,hard:1.3,period:3.8,rush:1.6},
+ {id:4,name:'テンタクルキング',size:160,rank:'モンスター',points:110,hard:1.6,period:3.6,rush:1.7},
+ {id:5,name:'ゴールドファング',size:260,rank:'伝説',points:200,hard:1.9,period:3.3,rush:1.7}
+];
+export const RODS=[{name:'バランス',speed:1,tension:1,detail:'巻く力も、糸の強さも標準'}, {name:'ガード',speed:.85,tension:.65,detail:'ゆっくり巻く・糸が切れにくい'}, {name:'パワー',speed:1.35,tension:1.4,detail:'速く巻く・糸が切れやすい'}];
 const shuffle=(a,r)=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 export class FishingGame{
- constructor(entries,rng=Math.random){this.pack=uniquePairs(entries);if(this.pack.length<4)throw Error('異なる訳の単語を4組以上用意してください。');this.rng=rng;this.deck=shuffle(this.pack,rng);this.round=0;this.catches=[];this.misses=[];this.streak=0;this.phase='ready';this.paused=false;}
- next(){if(!['ready','caught','escaped'].includes(this.phase))return false;if(this.round===5){this.phase='done';return true;}this.pair=this.deck[this.round%this.deck.length];this.options=shuffle([this.pair,...shuffle(this.pack.filter(x=>x!==this.pair),this.rng).slice(0,3)],this.rng);this.fish=FISH[this.round];this.round++;this.phase='quiz';this.reason='';this.elapsed=0;this.progress=0;this.tension=25;this.held=false;this.danger=0;return true;}
- answer(index){if(this.paused||this.phase!=='quiz'||!this.options[index])return false;if(this.options[index]!==this.pair){this.misses.push(this.pair);this.escape('えさが合わなかった！');return false;}this.phase='reel';return true;}
- get surge(){return this.elapsed%4.2>=2.5;}
+ constructor(entries,rng=Math.random){this.pack=uniquePairs(entries);if(this.pack.length<4)throw Error('異なる訳の単語を4組以上用意してください。');this.rng=rng;this.deck=[];this.round=0;this.phase='ready';this.paused=false;this.held=false;this.energy=0;this.rod=0;this.catches=[];this.misses=[];this.score=0;this.events=[];this.eventId=0;this.chain=0;this.feverLeft=0;this.perfects=0;this.missions=new Set();}
+ emit(type,data={}){this.events.push({type,...data});}
+ reward(label,points){this.score+=points;this.emit('reward',{key:'fish-'+(++this.eventId),label,points});}
+ question(kind){if(!this.deck.length)this.deck=shuffle(this.pack,this.rng);this.pair=this.deck.pop();this.options=shuffle([this.pair,...shuffle(this.pack.filter(p=>p!==this.pair),this.rng).slice(0,3)],this.rng);this.quizKind=kind;this.phase='quiz';this.held=false;}
+ next(){if(this.paused||!['ready','caught','escaped'].includes(this.phase))return false;if(this.round===8){this.phase='done';this.emit('done');return true;}this.round++;this.phase='select';this.fever=this.feverLeft>0;if(this.feverLeft>0)this.feverLeft--;this.targets=this.round===8?[FISH[5]]:shuffle(FISH.slice(0,this.round<3?3:5),this.rng).slice(0,3);this.held=false;this.reason='';if(this.round===8)this.emit('boss');else if(this.fever)this.emit('fever');return true;}
+ setRod(index){if(this.phase!=='select'||this.paused||!RODS[index])return false;this.rod=index;return true;}
+ select(id){if(this.phase!=='select'||this.paused)return false;const f=this.targets.find(f=>f.id===id);if(!f)return false;this.fish=f;this.progress=0;this.tension=22;this.elapsed=0;this.stun=0;this.cooldown=0;this.danger=0;this.bossQuiz=false;this.castTime=0;this.question('hook');return true;}
+ answer(index){if(this.phase!=='quiz'||this.paused||!this.options[index])return false;const correct=this.options[index]===this.pair;if(!correct){this.misses.push(this.pair);if(this.quizKind==='hook'){this.escape('えさが合わず逃げた！ 正しい意味を覚えて次へ');}else{this.phase='correction';this.progress=Math.max(0,this.progress-15);this.reason='大物が反撃！ 正しい意味を確認して再挑戦';}return false;}this.energy=Math.min(3,this.energy+1);if(this.quizKind==='hook'){this.phase='cast';}else{this.phase='reel';this.stun=2;this.tension=Math.max(0,this.tension-30);this.emit('boost');}return true;}
+ acknowledge(){if(this.phase!=='correction'||this.paused)return false;this.phase='reel';this.stun=1;return true;}
+ get castPower(){return (Math.sin(this.castTime*3.6-Math.PI/2)+1)*50;}
+ cast(){if(this.phase!=='cast'||this.paused)return false;this.perfect=this.castPower>=65&&this.castPower<=85;if(this.perfect){this.progress=15;this.tension=10;this.perfects++;this.emit('perfect');this.mission('cast',this.perfects>=3,'パーフェクト投げ3回',50);}this.phase='reel';this.emit('hit');return true;}
+ get behavior(){if(this.stun>0)return 'stunned';const cycle=this.elapsed%this.fish.period;const calm=this.fish.period-this.fish.rush;return cycle<calm-.55?'calm':cycle<calm?'warning':'rush';}
  hold(value){this.held=!!value&&!this.paused&&this.phase==='reel';}
  pause(value){this.paused=value;this.held=false;}
- escape(reason){this.phase='escaped';this.reason=reason;this.held=false;this.streak=0;}
- tick(dt){if(this.phase!=='reel'||this.paused)return;let remaining=Math.min(Math.max(dt,0),.25);while(remaining>0&&this.phase==='reel'){const s=Math.min(remaining,1/120);remaining-=s;this.elapsed+=s;const hard=1+(this.round-1)*.10;
- this.tension=Math.max(0,this.tension+(this.held?(this.surge?49:20)*hard:-43)*s);
- this.progress=Math.max(0,this.progress+(this.held?(this.surge?5:18)/hard:-2.5)*s);
- if(this.tension>80)this.danger+=s;
- if(this.tension>=100){this.escape('糸が切れた！ 暴れたら離そう');break;}
- if(this.elapsed>=22){this.escape('逃げられた！ おとなしい時に巻こう');break;}
- if(this.progress>=100){this.phase='caught';this.held=false;this.streak++;const grade=this.danger<.3?'S':this.danger<1.5?'A':'B';this.catch={...this.fish,grade,size:Math.round(this.fish.size*(grade==='S'?1.25:grade==='A'?1.1:1)),points:grade==='S'?45:grade==='A'?30:20};this.catches.push(this.catch);}
- }}
+ special(){if(this.phase!=='reel'||this.paused||this.cooldown>0||this.energy<1)return false;this.energy--;this.cooldown=.9;this.stun=this.fever?2.4:1.6;this.tension=Math.max(0,this.tension-38);this.progress=Math.min(100,this.progress+(this.fever?32:24)/Math.sqrt(this.fish.hard));this.emit('special',{power:this.fever?'MAX':'24'});this.checkProgress();return true;}
+ mission(key,condition,label,points){if(condition&&!this.missions.has(key)){this.missions.add(key);this.reward(label,points);this.emit('mission',{label});}}
+ checkProgress(){if(this.phase!=='reel')return;if(this.fish.id===5&&!this.bossQuiz&&this.progress>=50){this.bossQuiz=true;this.progress=Math.min(this.progress,75);this.question('boost');this.emit('awakening');return;}if(this.progress<100)return;this.phase='caught';this.held=false;const grade=this.danger<.3?'S':this.danger<1.5?'A':'B';const factor=grade==='S'?1.25:grade==='A'?1.1:1;this.catch={...this.fish,grade,size:Math.round(this.fish.size*factor),points:Math.round(this.fish.points*factor)*(this.fever?2:1),perfect:this.perfect};this.catches.push(this.catch);this.reward('釣り上げた！',this.catch.points);this.chain++;this.mission('three',this.catches.length>=3,'3匹キャッチ達成',50);this.mission('boss',this.fish.id===5,'伝説を釣り上げた',100);if(this.chain>=3){this.chain=0;this.feverLeft=2;this.emit('feverReady');}this.emit('catch');}
+ escape(reason){this.phase='escaped';this.reason=reason;this.held=false;this.chain=0;this.emit('escape');}
+ tick(dt){if(this.paused)return;let remaining=Math.min(Math.max(dt,0),.25);if(this.phase==='cast'){this.castTime+=remaining;return;}while(remaining>0&&this.phase==='reel'){const s=Math.min(remaining,1/120);remaining-=s;this.elapsed+=s;this.stun=Math.max(0,this.stun-s);this.cooldown=Math.max(0,this.cooldown-s);const rush=this.behavior==='rush',rod=RODS[this.rod];this.tension=Math.max(0,this.tension+(this.held?(rush?65:24)*rod.tension:-46)*s);this.progress=Math.max(0,this.progress+(this.held?(rush?3:21)*rod.speed/this.fish.hard:-2)*s);if(this.tension>80)this.danger+=s;if(this.tension>=100){this.escape('糸が切れた！ 暴れる予告が出たら指を離そう');break;}if(this.elapsed>=28){this.escape('魚が逃げた！ 必殺技を使って一気に巻こう');break;}this.checkProgress();}}
 }

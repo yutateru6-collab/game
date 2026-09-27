@@ -90,3 +90,10 @@
 - `node test-party-fx.mjs`: shared star rewards, deduplication and reduced-motion particle controls.
 - Mobile layout uses two-column choices, one hold button, pointer capture/cancel and background pause. Actual iPhone play and browser rendering remain unverified in this environment.
 - Reference: Fishing Star World Tour official publisher page https://fishingstar-wt.wfs.games/en/ and Nintendo listing https://www.nintendo.com/us/store/products/fishing-star-world-tour-switch/ (reeling, multiple locations, fish book). Original vocabulary/tension mechanics; no borrowed game art or code.
+
+## Fishing DX overhaul (2026-09-27)
+- `node test-fishing.mjs`: 54 combinations (6 fish × 3 rods × 30/60/120 Hz) catchable with control; full 8-cast journey; wrong answer gating, idle/constant-hold failures, special energy/cooldown, pause, boss second question/correction, fever and exact mission reward accounting.
+- `node test-fishing-ui.mjs`: executes actual controller in DOM adapter across all 8 casts, target/rod/cast choices, pointer cancel, blur release without pause, background pause, special button, boss question, result/review, local persistence and replay. Rewards reconcile with score, no duplicate keys.
+- Home routing and shared rewards/effects regression tests pass. New atlas visually inspected, 1536×1024, 3×2 grid.
+- Browser preview was previously blocked by browser URL policy; no workaround attempted. These are logic/controller tests, not rendered browser or iPhone playtests. Real-device layout, audio and touch feel remain unverified.
+- Public GitHub updates use an explicit allowlist. Private wordbook catalogue is excluded, original wordaso source untouched.
