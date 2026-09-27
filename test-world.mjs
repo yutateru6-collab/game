@@ -34,7 +34,7 @@ const tick=(g,n)=>{for(let i=0;i<n;i++)g.update(1/60);};
  assert.ok(new THREE.Vector3(-120,0,100).project(camera).x>0,'positive game X renders on screen right after world reflection');
  const g=new WorldGame(pack);g.aimDirection(1,0);g.setMove(0,1);tick(g,20);assert.equal(g.manualAim.z,g.player.z,'stick heading follows moving tank');assert.equal(g.manualAim.x-g.player.x,900);
 }
-const js=fs.readFileSync('dist/world-game.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');for(const m of js.matchAll(/\$\('([^']+)'\)/g))assert.ok(html.includes(`id="${m[1]}"`),'UI element '+m[1]);
+const js=fs.readFileSync('dist/world-game.js','utf8'),html=fs.readFileSync('dist/tank.html','utf8');for(const m of js.matchAll(/\$\('([^']+)'\)/g))assert.ok(html.includes(`id="${m[1]}"`),'UI element '+m[1]);
 console.log('PASS: 4-way / diagonal movement, camera math, walls, bridge, one-use gates, doors, timeout, shockwave, shields, splitters, barrels, collisions, UI references');
 // A grid navigator exercises real movement; it never teleports or changes combat state.
 function path(g,tx,tz){
