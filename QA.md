@@ -77,3 +77,9 @@
 - Added local wordaso v1 JSON import with book and ID-range selection. All source repository operations were read-only. No private dataset or credentials copied into game. Automatic GitHub import remains unconnected, explicitly labelled in UI.
 - PASS: test-party-fx, test-book-import, test-input, test-arcade, test-memory, test-bomb, test-maze-smooth, test-hub and test-world --journey. Unit/event adapters and engine simulations only.
 - Real iPhone visuals, touch performance and FPS remain unverified; prior browser URL-policy block was not bypassed.
+
+## Reward stars and connected private catalogue (2026-09-27)
+- All five games award persistent cosmetic stars for verified successes; combo bonuses, stage/round awards, clear +50 and a home total. Per-run event keys prevent double awards. Tank streak resets on an incorrect gate.
+- Owner-only Site has a pinned read-only catalogue snapshot: 10 books / 16,300 entries. Public GitHub updates explicitly exclude dist/private-wordbooks/. Source wordaso never written. Not live synchronization.
+- All entries pass the expanded literal-preserving tab parser; Target1900 1–1900 checked. Existing English phrases/long meanings preserved. No claim of auditing book editions or translation correctness.
+- Connected-catalogue, picker, import, reward FX, input, hub, arcade, memory, bomb and tank journey simulations pass. Actual phone/browser rendering remains unverified.

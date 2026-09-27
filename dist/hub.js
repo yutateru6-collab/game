@@ -13,3 +13,5 @@ input.addEventListener('input',()=>{error.textContent='';input.removeAttribute('
 $('editWords').onclick=openEditor;$('saveWords').onclick=save;
 $('sample').onclick=()=>{input.value=SAMPLE;error.textContent='';input.removeAttribute('aria-invalid');update();$('saved').textContent='サンプルを入れました。「この単語を保存」で確定します。';};
 for(const button of document.querySelectorAll('[data-game]'))button.onclick=()=>{const p=readWords(input.value);if(p.errors.length){showError(p.errors[0]);return;}let game=button.dataset.game;if(game==='random'){const eligible=Object.keys(routes).filter(g=>validFor(g,p.entries));game=eligible[Math.floor(Math.random()*eligible.length)];}if(!routes[game])return;if(!validFor(game,p.entries)){showError('このゲームには、異なる訳の単語を4組以上入れてください。');return;}if(!save())return;location.href=routes[game];};
+
+try{const n=Number(localStorage.getItem('party-stars-v1'))||0;const badge=document.createElement('p');badge.className='home-hint';badge.textContent='★ 集めたスター '+n+' 個';document.querySelector('.section-heading').before(badge);}catch{}

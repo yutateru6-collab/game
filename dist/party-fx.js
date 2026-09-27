@@ -1,6 +1,7 @@
 // Decorative effects only: no game state, collision geometry or input handlers change.
 const COLORS=['#ffcf32','#ff67a0','#38e3cf','#9274ff','#ffffff'];
 export function createPartyFX({document:doc=globalThis.document,window:win=globalThis.window}={}){
+ let earned=0,claimed=new Set(),ribbon;
  let canvas,ctx,badge,raf=0,last=0,particles=[],timer=0,lastBurst=-Infinity;
  const reduced=()=>win.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false;
  function clear(){lastBurst=-Infinity;particles=[];if(raf)win.cancelAnimationFrame(raf);raf=0;last=0;ctx?.clearRect(0,0,canvas.width,canvas.height);badge?.classList.remove('show');win.clearTimeout(timer);}
@@ -10,6 +11,8 @@ export function createPartyFX({document:doc=globalThis.document,window:win=globa
  function burst(kind='good',text='',target=null){if(doc.hidden)return;init();const now=win.performance.now();if(kind!=='win'&&now-lastBurst<100)return;lastBurst=now;
  if(text){badge.textContent=text;badge.dataset.kind=kind;badge.classList.remove('show');void badge.offsetWidth;badge.classList.add('show');win.clearTimeout(timer);timer=win.setTimeout(()=>badge.classList.remove('show'),kind==='win'?1900:1050);}
  if(reduced()||!ctx||kind==='miss')return;const r=target?.getBoundingClientRect?.(),x=r?r.left+r.width/2:win.innerWidth*.5,y=r?r.top+r.height*.4:win.innerHeight*.34;const count=kind==='win'?72:kind==='boom'?32:22;for(let i=0;i<count;i++){const a=Math.PI*2*i/count,speed=70+Math.random()*180;particles.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-110,life:.65+Math.random()*.7,color:COLORS[i%COLORS.length],size:4+Math.random()*6,star:i%3===0,rotation:0,spin:Math.random()*8-4});}particles=particles.slice(-120);if(!raf)raf=win.requestAnimationFrame(frame);}
- return {burst,clear};
+ function resetRewards(){clear();earned=0;claimed=new Set();if(!ribbon){ribbon=doc.createElement('div');ribbon.className='reward-ribbon';ribbon.setAttribute('aria-live','polite');const header=doc.querySelector?.('main header');if(header)header.after(ribbon);else{ribbon.classList.add('floating');doc.body.append(ribbon);}}ribbon.textContent='★ 今回のスター 0';}
+ function reward(key,label,points=10,combo=0,target=null){if(claimed.has(key))return false;claimed.add(key);const bonus=combo>0&&combo%5===0?20:combo===3?10:0;earned+=points+bonus;try{const old=Math.max(0,Number(win.localStorage.getItem('party-stars-v1'))||0);win.localStorage.setItem('party-stars-v1',String(old+points+bonus));}catch{}if(ribbon)ribbon.textContent='★ 今回 '+earned+' スター';const text=key==='clear'?'クリア！ ★＋'+points:bonus?'連続成功！ ★＋'+(points+bonus):label+' ★＋'+points;burst(key==='clear'||bonus?'win':'good',text,target);return true;}
+ return {burst,clear,reward,resetRewards};
 }
 export const partyFX=createPartyFX();
