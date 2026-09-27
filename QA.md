@@ -97,3 +97,13 @@
 - Home routing and shared rewards/effects regression tests pass. New atlas visually inspected, 1536×1024, 3×2 grid.
 - Browser preview was previously blocked by browser URL policy; no workaround attempted. These are logic/controller tests, not rendered browser or iPhone playtests. Real-device layout, audio and touch feel remain unverified.
 - Public GitHub updates use an explicit allowlist. Private wordbook catalogue is excluded, original wordaso source untouched.
+
+## Kart GP (2026-09-27)
+- `node test-kart.mjs`: full 3-lap/9-gate race at 30/60/120 Hz; quiz freezes every car and time; steering reset; drift tiers; consumable items/no-target retention; shield; delayed retry with 4-word decks; reverse review; exact rewards and terminal guards.
+- Fixed-seed centerline controller comparison: all correct 75.575 s / 1st, all wrong 93.5 s / 6th. This demonstrates vocabulary effects under identical simulated driving, not human play balance or a guaranteed result.
+- `node test-kart-ui.mjs`: actual controller under DOM adapter, renderer stubbed; async ready/start, simultaneous steering/drift, pointer cancel without free turbo, transient blur release, background pause, 9 questions, feedback, item usage, result/rewards, wrong-answer review until correct, replay.
+- `node test-kart-view.mjs`: actual Three.js projection math sampled around circuit; player remains visible with desired chase camera, positive steering appears screen-right, track/boost-pad axes align. Found and fixed camera clipping at hairpin and inverted lateral basis during implementation.
+- `node test-hub.mjs`, `node test-party-fx.mjs`: seven routes/eight launch cards, random compatibility, shared rewards regressions pass.
+- Atlas/backdrop visually inspected. Reuses local Three.js; road stripes instanced; render DPR capped at 1.5. No external scripts or runtime wordbook mutations.
+- Browser preview access was blocked earlier by browser URL policy, so no alternate browser workaround was used. WebGL raster appearance, actual iPhone touch feel/audio/FPS are NOT verified. Automated tests are engine/controller/math checks only.
+- Public GitHub publishing uses explicit code/assets allowlist and excludes private wordbook catalogue.

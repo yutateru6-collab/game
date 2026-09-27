@@ -7,3 +7,5 @@
 .fishing{--accent:#007985}.fishing-icon{position:absolute;font-size:clamp(65px,18vw,110px);inset:0;display:grid;place-items:center;filter:drop-shadow(0 5px 3px #17528777)}
 
 .fishing .fishing-icon{inset:8% 12%;background:#052a4a url(assets/fishing-creatures.webp) 100% 100%/300% 200% no-repeat;border-radius:30%;font-size:0}.fishing .game-art{background:#052a4a}.fishing .game-art>img{display:none}
+
+.kart{--accent:#c44375}.kart-art{background:#77d6ea url(assets/kart-island.webp) center/cover}.kart-driver{position:absolute;inset:4% 15%;background:url(assets/kart-racers.webp) 0 0/300% 200% no-repeat}
