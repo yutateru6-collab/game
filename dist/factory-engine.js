@@ -1,0 +1,10 @@
+import {uniquePairs} from './memory-engine.js';
+export class FactoryGame{
+ constructor(pack,{random=Math.random}={}){this.pack=uniquePairs(pack);if(this.pack.length<4)throw Error('異なる訳の単語を4組以上入れてください。');this.random=random;this.deck=this.shuffle(this.pack);this.cursor=0;this.remaining=60;this.lives=5;this.score=0;this.sorted=0;this.combo=0;this.missed=new Map();this.id=0;this.mode='play';this.wave=0;this.nextWave();}
+ shuffle(a){a=[...a];for(let i=a.length-1;i;i--){const j=Math.floor(this.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+ nextWave(){this.wave++;this.bins=Array.from({length:3},()=>this.deck[this.cursor++%this.deck.length]);this.orders=this.shuffle([0,1,2,0,1,2]);this.items=[];this.spawnClock=0;this.spawn();}
+ spawn(){if(!this.orders.length)return;const bin=this.orders.pop();this.items.push({id:++this.id,bin,word:this.bins[bin].word,age:0,lock:0,lane:this.id%3});}
+ drop(id,bin){if(this.mode!=='play'||!Number.isInteger(bin)||bin<0||bin>2)return null;const item=this.items.find(i=>i.id===id);if(!item||item.lock>0)return null;if(item.bin===bin){this.items=this.items.filter(i=>i!==item);this.sorted++;this.combo++;this.score+=100+Math.min(this.combo-1,5)*20;if(this.sorted===18){this.mode='won';this.score+=Math.ceil(this.remaining)*5;}return true;}this.fail(item);item.lock=.8;return false;}
+ fail(item){this.lives--;this.combo=0;const p=this.bins[item.bin];this.missed.set(p.word,p);if(this.lives<=0)this.mode='lost';}
+ tick(dt){if(this.mode!=='play'||!Number.isFinite(dt)||dt<=0)return;dt=Math.min(dt,.1);this.remaining=Math.max(0,this.remaining-dt);if(!this.remaining){this.mode='lost';return;}for(const item of [...this.items]){item.age+=dt;item.lock=Math.max(0,item.lock-dt);if(item.age>=12){this.fail(item);this.items=this.items.filter(i=>i!==item);if(this.mode!=='play')return;}}this.spawnClock+=dt;if(this.spawnClock>=1.9&&this.orders.length){this.spawnClock=0;this.spawn();}if(!this.items.length&&!this.orders.length){if(this.wave===3){this.mode=this.sorted>=15?'won':'lost';}else this.nextWave();}}
+}
