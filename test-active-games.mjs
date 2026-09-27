@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {KartGame,trackAt} from './dist/kart-engine.js';
+import {FishingGame,FISH} from './dist/fishing-engine.js';
+import {PRIZES,equip,equipped} from './dist/prizes.js';
+const pack=Array.from({length:20},(_,i)=>({word:'word'+i,meaning:'意味'+i}));
+let results=[];
+for(const hz of [30,60,120])for(const correct of [true,false]){const g=new KartGame(pack,{random:()=>.42,rolling:true});g.start();let frames=0,seen=-1,moving=0;while(g.phase!=='done'&&frames++<hz*400){if(g.phase==='race'){if(g.roadQuestion){assert.equal(g.phase,'race');if(seen!==g.gate){g.chooseLane(g.options.findIndex(p=>(p.word===g.pair.word)===correct));seen=g.gate;}moving++;}else{const t=trackAt(g.distance);g.input((-t.curve*g.speed-g.lateral*.6-g.headingError*2)/1.3,false);}if(g.item)g.useItem();}g.tick(1/hz);}assert.equal(g.phase,'done');assert.equal(g.answered,9);assert.equal(g.correct,correct?9:0);assert.ok(moving>0);results.push({hz,correct,rank:g.finishedRank,time:+g.time.toFixed(1)});}
+console.log('ROLLING',JSON.stringify(results));
+function battle(fish,rod,respond,hz=60){const g=new FishingGame(pack,()=>.42,{activeFight:true});g.next();g.targets=[fish];g.setRod(rod);g.select(fish.id);g.answer(g.options.indexOf(g.pair));for(let i=0;i<35;i++)g.tick(1/60);g.cast();for(let i=0;i<hz*35&&['reel','quiz'].includes(g.phase);i++){if(g.phase==='quiz'){g.answer(g.options.indexOf(g.pair));continue;}if(respond){const m=g.move;g.hold(m&&!m.resolved&&g.elapsed>=m.ready?m.kind==='reel':(['calm','stunned'].includes(g.behavior)&&g.tension<62));if(m&&!m.resolved&&g.elapsed>=m.ready&&['left','right'].includes(m.kind))g.respond(m.kind);if(g.energy&&g.cooldown===0&&g.progress<85&&(g.behavior==='rush'||g.elapsed>10))g.special();}else g.hold(g.elapsed%1<.6);g.tick(1/hz);}return g;}
+results=[];for(const hz of [30,60,120])for(const f of FISH)for(const rod of [0,1,2]){const g=battle(f,rod,true,hz);results.push({hz,fish:f.id,rod,phase:g.phase,t:+g.elapsed.toFixed(1),grade:g.catch?.grade,miss:g.failedMoves});}
+console.log('ACTIVE FISH: '+results.length+' combinations; all caught = '+results.every(r=>r.phase==='caught'));
+assert.ok(results.every(r=>r.phase==='caught'),'responding to cues should allow every fish/rod to finish');
+const fixed=FISH.map(f=>{const g=battle(f,1,false);return {fish:f.id,phase:g.phase,grade:g.catch?.grade,miss:g.failedMoves};});console.log('FIXED RHYTHM',JSON.stringify(fixed));assert.ok(fixed.every(r=>r.grade!=='S'),'fixed rhythm cannot earn S');
+const data=new Map(),storage={getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)};assert.equal(equip('candy',storage),false);storage.setItem('party-stars-v1','2200');for(const p of PRIZES){assert.equal(equip(p.id,storage),true);assert.equal(equipped(storage).id,p.id);}assert.equal(storage.getItem('party-stars-v1'),'2200');storage.setItem('party-stars-v1','NaN');assert.equal(equipped(storage).id,'classic');
+console.log('PASS moving gates, learning impact, active fish patterns, fixed-rhythm resistance and cosmetic eligibility.');
+
+// Moving question pause, lane selection and word record persistence.
+{const g=new KartGame(pack,{rolling:true,random:()=>.42});g.start();while(!g.roadQuestion)g.tick(.1);const before=g.distance,ai=g.ai[0].distance;g.chooseLane(0);assert.equal(g.answered,0,'choosing a lane must not submit early');g.tick(.1);assert.ok(g.distance>before&&g.ai[0].distance>ai);g.pause(true);const paused=g.distance;assert.equal(g.chooseLane(2),false);g.tick(.1);assert.equal(g.distance,paused);g.pause(false);assert.equal(g.laneTarget,null);}
+{const {recordPractice,reviewFirst}=await import('./dist/word-practice.js');const data=new Map();globalThis.localStorage={getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)};recordPractice(pack[7],false);assert.equal(reviewFirst(pack)[0],pack[7]);recordPractice(pack[7],true);recordPractice(pack[7],true);assert.equal(reviewFirst(pack)[0],pack[0]);delete globalThis.localStorage;}
+console.log('PASS active pause/resume, no early submission, and shared weak-word priority.');

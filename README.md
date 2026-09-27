@@ -119,3 +119,10 @@ Three.jsはMITライセンスです。`dist/vendor/THREE-LICENSE.txt` を参照�
 操作：左右ボタン＋DRIFTを複数指で操作。PCは←→/A・D、Spaceでドリフト、Xでアイテム。コース外は減速。走行中のハンドルアシストはなく、カーブに合わせた操作が必要。全車の進行距離から順位を算出。ひとり用のCPU対戦。WebGLが必要。
 
 参考：任天堂掲載の基本テクニック記事 https://www.nintendo.com/jp/ichikara/aabpa/index.html （ドリフト解放ターボ・加速板・順位に応じたアイテム・自動アクセル）。キャラクター・コース・画像・実装はオリジナル。原作全機能を再現したものではありません。
+
+### September 27 gameplay revision
+
+- Kart uses moving four-lane vocabulary gates. Tap an answer (or keys 1–4) to move to its numbered lane; submission happens at the gate, not on tap. Reading sections reduce speed and protect against involuntary collision/oil lane mistakes. Outside those sections, steering has heading inertia; brake with ↓, drift with Space. Drift success awards stars. Records use a new key because race timing changed.
+- Fishing adds telegraphed left/right escapes, jumps (release reel), and dives (hold reel). Successful reactions are required to land a fish: 1 for small fish, 2 for large fish, 3 for the legendary fish. S rank also needs a perfect cast, no failed reactions, low tension exposure, and a catch within 22 seconds.
+- Six cumulative-star cosmetic unlocks change the player's kart sprite and interface accent. Stars are not spent. Vocabulary mistakes in kart and fishing share device-local practice priority; imported source books are never modified.
+- Validation: `node test-active-games.mjs`, controller DOM adapters, Three.js scene geometry checks, existing book importer and hub tests. These checks do **not** constitute browser/iPhone playtesting or GPU raster validation. Browser access remains unavailable under the session policy.

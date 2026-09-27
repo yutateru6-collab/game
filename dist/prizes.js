@@ -1,0 +1,4 @@
+export const PRIZES=[{id:'classic',name:'サンシャイン',stars:0,driver:0},{id:'soda',name:'ソーダラビット',stars:150,driver:1},{id:'berry',name:'ベリーパンダ',stars:400,driver:2},{id:'gold',name:'ゴールデンチック',stars:800,driver:3},{id:'mint',name:'ミントキャット',stars:1400,driver:4},{id:'candy',name:'キャンディラクーン',stars:2200,driver:5}];
+export function stars(storage=globalThis.localStorage){try{const n=Number(storage.getItem('party-stars-v1'));return Number.isFinite(n)?Math.max(0,n):0;}catch{return 0;}}
+export function equipped(storage=globalThis.localStorage){try{return PRIZES.find(p=>p.id===storage.getItem('party-look-v1')&&p.stars<=stars(storage))??PRIZES[0];}catch{return PRIZES[0];}}
+export function equip(id,storage=globalThis.localStorage){const p=PRIZES.find(p=>p.id===id);if(!p||p.stars>stars(storage))return false;try{storage.setItem('party-look-v1',id);return true;}catch{return false;}}
