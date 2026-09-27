@@ -1,0 +1,15 @@
+// Decorative effects only: no game state, collision geometry or input handlers change.
+const COLORS=['#ffcf32','#ff67a0','#38e3cf','#9274ff','#ffffff'];
+export function createPartyFX({document:doc=globalThis.document,window:win=globalThis.window}={}){
+ let canvas,ctx,badge,raf=0,last=0,particles=[],timer=0,lastBurst=-Infinity;
+ const reduced=()=>win.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false;
+ function clear(){lastBurst=-Infinity;particles=[];if(raf)win.cancelAnimationFrame(raf);raf=0;last=0;ctx?.clearRect(0,0,canvas.width,canvas.height);badge?.classList.remove('show');win.clearTimeout(timer);}
+ function init(){if(canvas)return;canvas=doc.createElement('canvas');canvas.className='party-particles';canvas.setAttribute('aria-hidden','true');doc.body.append(canvas);ctx=canvas.getContext('2d');badge=doc.createElement('div');badge.className='party-callout';badge.setAttribute('aria-hidden','true');doc.body.append(badge);win.addEventListener('resize',resize);doc.addEventListener('visibilitychange',()=>{if(doc.hidden)clear();});win.addEventListener('pagehide',clear);resize();}
+ function resize(){if(!canvas)return;const dpr=Math.min(win.devicePixelRatio||1,1.5);canvas.width=Math.round(win.innerWidth*dpr);canvas.height=Math.round(win.innerHeight*dpr);ctx?.setTransform(dpr,0,0,dpr,0,0);}
+ function frame(t){raf=0;const dt=last?Math.min((t-last)/1000,.04):.016;last=t;ctx.clearRect(0,0,win.innerWidth,win.innerHeight);particles=particles.filter(p=>p.life>0);for(const p of particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.rotation+=p.spin*dt;ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,p.life*2));ctx.translate(p.x,p.y);ctx.rotate(p.rotation);ctx.fillStyle=p.color;if(p.star){ctx.beginPath();for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,r=i%2?p.size*.45:p.size;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);}ctx.closePath();ctx.fill();}else ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*.55);ctx.restore();}if(particles.length)raf=win.requestAnimationFrame(frame);else last=0;}
+ function burst(kind='good',text='',target=null){if(doc.hidden)return;init();const now=win.performance.now();if(kind!=='win'&&now-lastBurst<100)return;lastBurst=now;
+ if(text){badge.textContent=text;badge.dataset.kind=kind;badge.classList.remove('show');void badge.offsetWidth;badge.classList.add('show');win.clearTimeout(timer);timer=win.setTimeout(()=>badge.classList.remove('show'),kind==='win'?1900:1050);}
+ if(reduced()||!ctx||kind==='miss')return;const r=target?.getBoundingClientRect?.(),x=r?r.left+r.width/2:win.innerWidth*.5,y=r?r.top+r.height*.4:win.innerHeight*.34;const count=kind==='win'?72:kind==='boom'?32:22;for(let i=0;i<count;i++){const a=Math.PI*2*i/count,speed=70+Math.random()*180;particles.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-110,life:.65+Math.random()*.7,color:COLORS[i%COLORS.length],size:4+Math.random()*6,star:i%3===0,rotation:0,spin:Math.random()*8-4});}particles=particles.slice(-120);if(!raf)raf=win.requestAnimationFrame(frame);}
+ return {burst,clear};
+}
+export const partyFX=createPartyFX();

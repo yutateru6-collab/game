@@ -1,0 +1,7 @@
+import assert from 'node:assert/strict';
+import {createPartyFX} from './dist/party-fx.js';
+const nodes=[],frames=new Map(),listeners={},classes=()=>({add(){},remove(){}});let reduced=false,now=0,id=0;
+const context=new Proxy({},{get:()=>()=>{},set:()=>true});
+const doc={hidden:false,body:{append:n=>nodes.push(n)},createElement:tag=>({tag,classList:classes(),dataset:{},setAttribute(){},getContext:()=>context}),addEventListener:(name,fn)=>listeners[name]=fn};
+const win={innerWidth:390,innerHeight:844,devicePixelRatio:3,performance:{now:()=>now},matchMedia:()=>({matches:reduced}),addEventListener(){},clearTimeout(){},setTimeout:()=>1,requestAnimationFrame:fn=>{frames.set(++id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id)};
+const fx=createPartyFX({document:doc,window:win});fx.burst('good','正解！');assert.equal(nodes.length,2);assert.equal(nodes[0].width,585,'DPR capped at 1.5');assert.equal(frames.size,1);for(let i=0;i<20;i++)fx.burst('good');assert.equal(frames.size,1,'only one animation loop');fx.clear();assert.equal(frames.size,0);reduced=true;now=1000;fx.burst('win','CLEAR!');assert.equal(frames.size,0,'reduced motion never animates particles');assert.equal(nodes[1].textContent,'CLEAR!');reduced=false;now=2000;fx.burst('boom');assert.equal(frames.size,1);doc.hidden=true;listeners.visibilitychange();assert.equal(frames.size,0,'background cancels animation');console.log('PASS: lazy single canvas, bounded DPR, burst throttle, single animation loop, reduced motion and background cleanup. No browser/FPS claim.');

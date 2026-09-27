@@ -70,3 +70,10 @@
 - `node test-hub.mjs`: five routes, editing/saving, malformed input, insufficient distinct meanings, eligible random routing, storage denial, all asset paths pass in a Node DOM adapter.
 - Asset inspected. Actual browser rendering, 200% text zoom, and iPhone touch checks remain unverified because the earlier preview browser URL policy block has not been bypassed.
 - Further candidates, not yet implemented: beginner practice mode without a timer; a three-game party course with a shared result; common review of missed words across all games. Prioritize practice before more game modes.
+
+## Pop game feedback + read-only wordbook import (2026-09-27)
+- Five themed game palettes, original existing menu art reused in four introduction panels; brighter tank materials and multicolor world particles with turret recoil.
+- Shared bounded decorative canvas: pair/combo stars, delivery bursts, bomb/maze explosions, tank upgrades/chain/area celebrations, result confetti. Pointer events disabled, 120 particle cap, 1.5 DPR cap, single animation loop, reduced-motion support and background cleanup. Game logic unchanged.
+- Added local wordaso v1 JSON import with book and ID-range selection. All source repository operations were read-only. No private dataset or credentials copied into game. Automatic GitHub import remains unconnected, explicitly labelled in UI.
+- PASS: test-party-fx, test-book-import, test-input, test-arcade, test-memory, test-bomb, test-maze-smooth, test-hub and test-world --journey. Unit/event adapters and engine simulations only.
+- Real iPhone visuals, touch performance and FPS remain unverified; prior browser URL-policy block was not bypassed.

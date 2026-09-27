@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#087cce"><meta name="description" content="自分の英単語で遊ぶ、5つのミニゲーム。戦車、宝探し、爆弾リレー、ボム迷路、仕分け工場から選ぼう。">
 <title>ことばパーティ｜ゲームをえらぼう！</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='18' fill='%23ffcf36'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-size='43'%3E★%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="hub.css"><script type="module" src="hub.js"></script>
+<link rel="stylesheet" href="hub.css"><script type="module" src="hub.js"></script><script type="module" src="book-picker.js"></script>
 </head>
 <body>
 <main class="party-shell">
@@ -21,6 +21,6 @@
 <button class="game-card surprise" data-game="random" aria-label="おまかせでゲームを選ぶ"><span class="game-art" style="--col:2;--row:1" aria-hidden="true"><img src="assets/party-menu.webp" alt="" width="1536" height="1024" loading="lazy"></span><span class="game-copy"><span class="genre">迷ったら、これ！</span><strong class="game-title">おまかせスタート</strong><span class="game-description">遊べるゲームから選ぶよ</span><span class="play-label">えらんで！ <span aria-hidden="true">▶</span></span></span></button>
 </section>
 <p class="home-hint">どのゲームも、セットした同じ単語で遊べます。</p>
-<details id="wordEditor" class="word-editor"><summary>単語セットを編集する</summary><label for="words">英単語と日本語訳を、1行に1組</label><textarea id="words" spellcheck="false" autocapitalize="off" aria-describedby="formatHelp error" placeholder="reduce,減らす"></textarea><p id="formatHelp">4組以上。カンマ・タブ・コロンで区切ります。宝箱・迷路・工場には、異なる訳が4つ以上必要です。</p><div class="editor-actions"><button id="saveWords" class="save-button">この単語を保存</button><button id="sample" class="sample-button">サンプルを入れる</button></div><p id="error" class="error" role="alert"></p><p id="saved" class="saved" role="status"></p><p class="storage-note">単語はこのブラウザに保存されます。</p></details>
+<details class="word-editor book-picker"><summary>単語帳・番号で選ぶ</summary><p>wordasoから書き出した単語帳JSONを開くと、単語帳と範囲を選べます。GitHubの自動取得はまだ未接続です。</p><label for="bookFile">単語帳JSONを開く</label><input id="bookFile" type="file" accept=".json,application/json"><div id="bookFields" hidden><label for="bookSelect">単語帳</label><select id="bookSelect"></select><div class="book-range"><label>開始番号<input id="bookFrom" type="number" min="1" step="1" inputmode="numeric"></label><label>終了番号<input id="bookTo" type="number" min="1" step="1" inputmode="numeric"></label></div><p id="bookPreview" class="book-preview"></p><button id="applyBook" class="save-button" disabled>この範囲であそぶ</button></div><p id="bookStatus" role="status"></p><p class="storage-note">取り込みはこの端末内だけ。元の単語帳を書き換えたり、ファイルを送信したりしません。</p></details><details id="wordEditor" class="word-editor"><summary>単語セットを編集する</summary><label for="words">英単語と日本語訳を、1行に1組</label><textarea id="words" spellcheck="false" autocapitalize="off" aria-describedby="formatHelp error" placeholder="reduce,減らす"></textarea><p id="formatHelp">4組以上。カンマ・タブ・コロンで区切ります。宝箱・迷路・工場には、異なる訳が4つ以上必要です。</p><div class="editor-actions"><button id="saveWords" class="save-button">この単語を保存</button><button id="sample" class="sample-button">サンプルを入れる</button></div><p id="error" class="error" role="alert"></p><p id="saved" class="saved" role="status"></p><p class="storage-note">単語はこのブラウザに保存されます。</p></details>
 </main>
 </body></html>
