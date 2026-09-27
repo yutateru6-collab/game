@@ -1,0 +1,61 @@
+export const END_Z=4750;
+export const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+export const roadWidth=z=>z>=1200&&z<1800?185:z>=3150&&z<3900?340:440;
+export const areaName=z=>z<1200?'城門前':z<1800?'峡谷の橋':z<3150?'戦いの広場':z<3900?'城内回廊':'魔王の庭';
+export const segmentHit=(ax,az,bx,bz,x,z,r)=>{let dx=bx-ax,dz=bz-az,l=dx*dx+dz*dz,t=l?clamp(((x-ax)*dx+(z-az)*dz)/l,0,1):0;return Math.hypot(ax+dx*t-x,az+dz*t-z)<=r?t:null;};
+const spec={grunt:{hp:5,speed:88,r:23,color:0xb297df},runner:{hp:3,speed:164,r:17,color:0xf8b354},shield:{hp:18,speed:66,r:29,color:0x68d6f1},splitter:{hp:10,speed:78,r:26,color:0x95e78b},shard:{hp:2,speed:172,r:12,color:0xabf894},boss:{hp:850,speed:65,r:80,color:0xff857d}};
+export class WorldGame{
+ constructor(pack,{random=Math.random,event=()=>{}}={}){this.pack=pack;this.random=random;this.event=event;this.mode='play';this.time=0;this.hp=100;this.power=1;this.correct=0;this.answered=0;this.kills=0;this.score=0;this.charge=0;this.jam=0;this.flash=0;this.fireClock=0;this.hitCooldown=0;this.id=0;this.boss=null;this.bossDead=false;this.activeGate=null;this.missed=new Map();this.enemies=[];this.shots=[];this.orbs=[];this.effects=[];this.arcs=[];this.input={x:0,z:0};this.manualAim=null;this.player={x:0,z:100,r:29,angle:0};this.camera={x:0,z:100};this.stats={fired:0,hits:0,barrels:0,shockwaves:0,distance:0};this.deck=[];
+ this.walls=[{x:-290,z:750,w:170,d:75,h:100},{x:265,z:880,w:170,d:75,h:95},{x:-200,z:2070,w:190,d:85,h:115},{x:190,z:2250,w:180,d:85,h:115},{x:0,z:2800,w:190,d:90,h:120},{x:-225,z:3370,w:105,d:130,h:120},{x:210,z:3560,w:105,d:130,h:120}];
+ this.barrels=[{x:-160,z:860},{x:150,z:900},{x:0,z:1570},{x:-280,z:2220},{x:275,z:2440},{x:100,z:2900},{x:-120,z:3520},{x:220,z:4050}].map((e,i)=>({...e,id:'barrel'+i,hp:3,r:25}));
+ this.boxes=[{x:350,z:2170,type:'heal'},{x:-350,z:2720,type:'power'},{x:275,z:3470,type:'heal'}].map((e,i)=>({...e,id:'box'+i,taken:false}));
+ this.gates=[500,1050,1840,2470,3050,3770].map((z,i)=>({z,id:i,resolved:false,age:0,duration:9,target:null,side:0,words:[],operation:i===3||i===5?['×',2]:['+',i<2?2:i===4?4:3]}));
+ this.makeEnemy('grunt',-90,380,0);this.makeEnemy('grunt',90,410,0);
+ }
+ shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(this.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+ get tier(){return this.power>=12?'雷撃連鎖':this.power>=6?'貫通砲':this.power>=3?'多連装砲':'単装砲';}
+ setMove(x,z){const l=Math.max(1,Math.hypot(x,z));this.input={x:x/l,z:z/l};}
+ aimAt(x,z){this.aimVector=null;this.manualAim={x,z};}
+ aimDirection(x,z){this.aimVector={x,z};this.manualAim={x:this.player.x+x*900,z:this.player.z+z*900};}
+ autoAim(){this.manualAim=null;this.aimVector=null;}
+ currentLock(){return this.gates.find(g=>g.resolved&&!g.cleared);}
+ blocked(x,z,r=29){if(Math.abs(x)>roadWidth(z)-r||z<r||z>END_Z+120)return true;const lock=this.currentLock();if(lock&&z>(this.gates[lock.id+1]?.z??4100)-140)return true;for(const w of this.walls){const qx=clamp(x,w.x-w.w/2,w.x+w.w/2),qz=clamp(z,w.z-w.d/2,w.z+w.d/2);if(Math.hypot(x-qx,z-qz)<r)return true;}return false;}
+ moveEntity(e,dx,dz,isPlayer=false){const oldx=e.x,oldz=e.z;const blocked=(x,z)=>isPlayer?this.blocked(x,z,e.r):this.solid(x,z,e.r);if(!blocked(e.x+dx,e.z))e.x+=dx;if(!blocked(e.x,e.z+dz))e.z+=dz;return Math.hypot(e.x-oldx,e.z-oldz);}
+ solid(x,z,r){if(Math.abs(x)>roadWidth(z)-r||z<0)return true;for(const w of this.walls){if(Math.hypot(x-clamp(x,w.x-w.w/2,w.x+w.w/2),z-clamp(z,w.z-w.d/2,w.z+w.d/2))<r)return true;}return false;}
+ activate(g){if(!this.deck.length)this.deck=this.shuffle(this.pack);g.target=this.deck.pop();const other=this.shuffle(this.pack.filter(e=>e.meaning!==g.target.meaning&&e.word!==g.target.word))[0];g.side=this.random()<.5?0:1;g.words=g.side===0?[g.target,other]:[other,g.target];this.activeGate=g;this.event('question',g);}
+ resolve(g,side){if(g.resolved)return;g.resolved=true;this.activeGate=null;this.answered++;const before=this.power;if(side===g.side){this.correct++;this.power=Math.min(24,g.operation[0]==='×'?this.power*g.operation[1]:this.power+g.operation[1]);this.hp=Math.min(100,this.hp+8);this.score+=200;this.event('correct',{word:g.target.word,power:this.power,tier:this.tier,before});this.effect('burst',this.player.x,this.player.z,0xffdf88,32);}else{this.power=Math.max(1,Math.floor(this.power/2));this.jam=1.5;this.missed.set(g.target.word,g.target);this.damage(12,true);this.event('wrong',{word:g.target.word,meaning:g.target.meaning});}this.spawnWave(g.id);}
+ makeEnemy(type,x,z,wave){const s=spec[type],e={...s,type,x,z,wave,id:++this.id,maxHp:s.hp,hp:s.hp,angle:Math.PI,t:0,hit:0,cooldown:0,dead:false,phase:'chase',timer:0};this.enemies.push(e);return e;}
+ spawnWave(wave){const g=this.gates[wave],count=12+wave*6;for(let i=0;i<count;i++){const z=g.z+180+Math.floor(i/7)*54;let type='grunt';if(wave>=1&&i%5===0)type='runner';if(wave>=2&&i%9===0)type='shield';if(wave>=3&&i%11===0)type='splitter';const width=roadWidth(z)-55;let x=((i%7)/6*2-1)*width;let e=this.makeEnemy(type,x,z,wave);let tries=0;while(this.solid(e.x,e.z,e.r)&&tries++<20){e.z+=e.r*2;e.x=clamp(e.x,-roadWidth(e.z)+e.r+10,roadWidth(e.z)-e.r-10);}}
+ if(wave===2||wave===3){const box=this.boxes[wave-2];this.makeEnemy('shield',box.x,box.z+90,wave);}}
+ damage(n,force=false){if(this.mode!=='play'||(!force&&this.hitCooldown>0))return;this.hp=Math.max(0,this.hp-n);this.hitCooldown=.5;this.flash=.3;this.event('damage',{amount:n});if(this.hp<=0)this.end(false,'戦車の耐久が尽きた');}
+ effect(kind,x,z,color,count=10){this.effects.push({id:++this.id,kind,x,z,color,count,life:kind==='shock'? .7:.5,max:kind==='shock'?.7:.5});}
+ kill(e){if(e.dead)return;e.dead=true;this.kills++;this.score+=e.type==='boss'?2500:e.type==='shield'?80:20;this.charge=Math.min(100,this.charge+5);this.effect(e.type==='runner'?'streak':e.type==='shield'?'shock':'burst',e.x,e.z,e.color,e.type==='shield'?24:10);if(e.type==='splitter'){this.makeEnemy('shard',e.x-28,e.z,e.wave);this.makeEnemy('shard',e.x+28,e.z,e.wave);}if(e.type==='boss'){this.bossDead=true;this.event('bossDown',{});}this.event('kill',e);}
+ hurt(e,amount,fromX,fromZ,pierce=false){if(e.dead)return;let multiplier=1;if(e.type==='shield'&&!pierce){const dir=Math.atan2(fromX-e.x,fromZ-e.z);if(Math.cos(dir-e.angle)>.35)multiplier=.15;}if(e.type==='boss'&&e.phase!=='stunned')multiplier=.25;e.hp-=amount*multiplier;e.hit=.1;if(e.hp<=0)this.kill(e);}
+ explode(b){if(b.hp<=-999)return;b.hp=-999;this.stats.barrels++;this.effect('shock',b.x,b.z,0xffa84d,36);for(const e of this.enemies)if(!e.dead&&Math.hypot(e.x-b.x,e.z-b.z)<225)this.hurt(e,30,b.x,b.z,true);if(Math.hypot(this.player.x-b.x,this.player.z-b.z)<180)this.damage(12);for(const other of this.barrels)if(other!==b&&other.hp>0&&Math.hypot(other.x-b.x,other.z-b.z)<180)this.explode(other);this.event('barrel',{});}
+ shockwave(){if(this.mode!=='play'||this.charge<100)return false;this.charge=0;this.stats.shockwaves++;this.effect('shock',this.player.x,this.player.z,0xc99cff,48);for(const e of this.enemies){const dx=e.x-this.player.x,dz=e.z-this.player.z,l=Math.hypot(dx,dz);if(l<440){this.hurt(e,e.type==='boss'?55:22,this.player.x,this.player.z,true);if(l&&e.type!=='boss')this.moveEntity(e,dx/l*100,dz/l*100);}}this.event('shock',{});return true;}
+ shoot(){let p=this.player,target=this.manualAim;if(!target){target=this.enemies.filter(e=>!e.dead&&Math.hypot(e.x-p.x,e.z-p.z)<820).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z))[0];}if(!target)target={x:p.x,z:p.z+800};p.angle=Math.atan2(target.x-p.x,target.z-p.z);const n=this.power;for(let i=0;i<n;i++){const offset=(i-(n-1)/2)*Math.min(12,100/n),x=p.x+Math.cos(p.angle)*offset,z=p.z-Math.sin(p.angle)*offset;const a=p.angle+offset*.0009;this.shots.push({id:++this.id,x:x+Math.sin(a)*60,z:z+Math.cos(a)*60,vx:Math.sin(a)*1000,vz:Math.cos(a)*1000,life:.85,damage:1.5,pierce:this.power>=6?2:1,hit:new Set(),chain:this.power>=12&&i%3===0});this.stats.fired++;}}
+ updateBoss(e,dt){const p=this.player;e.timer-=dt;
+ if(e.phase==='chase'){const dx=p.x-e.x,dz=p.z-e.z,l=Math.hypot(dx,dz)||1;e.angle=Math.atan2(dx,dz);this.moveEntity(e,dx/l*e.speed*dt,dz/l*e.speed*dt);if(e.timer<=0){e.phase='windup';e.timer=1.2;e.target={x:p.x,z:p.z};this.event('bossWindup',{});}}
+ else if(e.phase==='windup'&&e.timer<=0){e.phase='charge';e.timer=2.1;const dx=e.target.x-e.x,dz=e.target.z-e.z,l=Math.hypot(dx,dz)||1;e.chargeVector={x:dx/l,z:dz/l};}
+ else if(e.phase==='charge'){const v=e.chargeVector,d=this.moveEntity(e,v.x*490*dt,v.z*490*dt);if(d<490*dt*.5||e.timer<=0||e.z<3850||e.z>4590){e.phase='stunned';e.timer=3;this.effect('shock',e.x,e.z,0xffd68c,35);this.event('bossStunned',{});}}
+ else if(e.phase==='stunned'&&e.timer<=0){e.phase='chase';e.timer=3.4;for(let i=0;i<5;i++)this.makeEnemy('runner',-260+i*130,4400,-2);}
+ }
+ update(dt){if(this.mode!=='play')return;dt=Math.min(dt,.04);this.time+=dt;this.hitCooldown=Math.max(0,this.hitCooldown-dt);this.jam=Math.max(0,this.jam-dt);this.flash=Math.max(0,this.flash-dt);const p=this.player,oldZ=p.z;this.stats.distance+=this.moveEntity(p,this.input.x*240*dt,this.input.z*240*dt,true);
+ if(this.aimVector)this.manualAim={x:p.x+this.aimVector.x*900,z:p.z+this.aimVector.z*900};
+ this.camera.x+=(p.x*.55-this.camera.x)*Math.min(1,dt*3.2);this.camera.z+=(p.z-this.camera.z)*Math.min(1,dt*4);
+ for(const g of this.gates){if(g.resolved)continue;if(!this.activeGate&&!this.currentLock()&&p.z>g.z-300&&p.z<g.z+80)this.activate(g);if(g===this.activeGate){g.age+=dt;if(oldZ<g.z&&p.z>=g.z)this.resolve(g,Math.abs(p.x)<18?-1:p.x<0?0:1);else if(g.age>=g.duration)this.resolve(g,-1);}break;}
+ for(const g of this.gates)if(g.resolved&&!g.cleared&&this.enemies.filter(e=>!e.dead&&e.wave===g.id).length===0){g.cleared=true;this.event('clear',{id:g.id});}
+ if(p.z>3990&&!this.boss){this.boss=this.makeEnemy('boss',0,4430,-1);this.boss.timer=2;this.event('boss',{});}if(p.z>END_Z-70&&this.bossDead)this.end(true,'魔王を倒して城を突破した');if(!this.bossDead&&p.z>4580)p.z=4580;
+ for(const box of this.boxes)if(!box.taken&&Math.hypot(p.x-box.x,p.z-box.z)<60){box.taken=true;if(box.type==='heal')this.hp=Math.min(100,this.hp+28);else this.power=Math.min(24,this.power+2);this.effect('burst',box.x,box.z,0xffdf88,20);this.event('pickup',{type:box.type});}
+ const slow=this.activeGate?.42:1;
+ for(const e of this.enemies){if(e.dead)continue;e.t+=dt;e.hit=Math.max(0,e.hit-dt);if(e.type==='boss')this.updateBoss(e,dt*slow);else{const dx=p.x-e.x,dz=p.z-e.z,l=Math.hypot(dx,dz)||1;e.angle=Math.atan2(dx,dz);if(l>p.r+e.r-5){let vx=dx/l,vz=dz/l;if(e.type==='runner'){vx+=Math.sin(e.t*5+e.id)*.25;}const step=e.speed*dt*slow;let moved=this.moveEntity(e,vx*step,vz*step);if(moved<step*.3){const sign=e.id%2?1:-1;this.moveEntity(e,-vz*step*sign,vx*step*sign);}}}if(Math.hypot(e.x-p.x,e.z-p.z)<e.r+p.r){this.damage(e.type==='boss'?24:e.type==='shield'?14:7);}}
+ this.fireClock+=dt;if(this.fireClock>=.19&&this.jam<=0){this.fireClock=0;this.shoot();}
+ for(let i=this.shots.length-1;i>=0;i--){const b=this.shots[i],px=b.x,pz=b.z;b.x+=b.vx*dt;b.z+=b.vz*dt;b.life-=dt;let collision=null,nearest=Infinity;for(const e of this.enemies){if(e.dead||b.hit.has(e.id))continue;let t=segmentHit(px,pz,b.x,b.z,e.x,e.z,e.r+4);if(t!==null&&t<nearest){nearest=t;collision=e;}}
+ for(const barrel of this.barrels){if(barrel.hp<=0)continue;let t=segmentHit(px,pz,b.x,b.z,barrel.x,barrel.z,barrel.r);if(t!==null&&t<nearest){nearest=t;collision=barrel;}}
+ if(this.solid(b.x,b.z,2)){b.life=0;collision=null;}
+ if(collision){if(String(collision.id).startsWith('barrel')){collision.hp-=b.damage;if(collision.hp<=0)this.explode(collision);b.life=0;}else{this.stats.hits++;b.hit.add(collision.id);this.hurt(collision,b.damage,px,pz,this.power>=6);b.pierce--;if(b.chain){let next=this.enemies.filter(e=>!e.dead&&e!==collision&&Math.hypot(e.x-collision.x,e.z-collision.z)<160).slice(0,2);for(const e of next){this.hurt(e,.9,collision.x,collision.z,true);this.arcs.push({id:++this.id,x:collision.x,z:collision.z,tx:e.x,tz:e.z,life:.15});}}if(b.pierce<=0)b.life=0;}}
+ if(b.life<=0)this.shots.splice(i,1);}
+ this.enemies=this.enemies.filter(e=>!e.dead);this.effects=this.effects.filter(e=>(e.life-=dt)>0);this.arcs=this.arcs.filter(e=>(e.life-=dt)>0);
+ }
+ end(win,reason){if(this.mode!=='play')return;this.mode=win?'won':'lost';this.event('end',{win,reason});}
+}
