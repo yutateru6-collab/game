@@ -54,3 +54,11 @@
 前版でMob Controlの公式ストアと公式プレイ映像、Last Warの公式ストアから、左右移動・増殖ゲート・群れとの戦闘を参考にした。既存作品の素材は使用していない。
 - https://store.steampowered.com/app/2736490/Mob_Control/
 - https://apps.apple.com/us/app/last-war-survival/id6448786147
+
+## Continuous maze movement and two-column home (2026-09-27)
+- Replaced 150 ms tile jumps with continuous positions, 120 Hz bounded simulation substeps, immediate release, and corridor turn assistance. Player/enemy DOM actors move with transforms; unchanged terrain is retained.
+- Added D-pad pointer sliding, blast prediction, tenths-of-a-second fuse labels, enemy patrol/chase differences, and randomized vocabulary distractors.
+- Home uses two equal responsive card columns, including narrow phones. No word-dependent imagery.
+- `node test-maze-smooth.mjs`: identical movement distances at 30/60/120 Hz, immediate stop, corner entry, wall blocking, bomb escape, moving flame hit, enemy continuous positions, quiz freeze passed.
+- `node test-arcade.mjs`, `node test-input.mjs`, `node test-memory.mjs`, `node test-bomb.mjs` passed.
+- Browser preview was blocked by the browser URL policy in this environment. No real iPhone touch, visual layout, or on-device FPS verification is claimed. Browser testing was not bypassed.
