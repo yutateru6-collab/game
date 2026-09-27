@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {FishingGame} from './dist/fishing-engine.js';
+const pack=Array.from({length:20},(_,i)=>({word:'word'+i,meaning:'意味'+i}));
+const fresh=()=>{const g=new FishingGame(pack,()=>.42);g.next();return g;};
+assert.throws(()=>new FishingGame(pack.slice(0,3)));
+let g=fresh();assert.equal(new Set(g.options.map(x=>x.meaning)).size,4);g.answer(g.options.findIndex(x=>x!==g.pair));assert.equal(g.phase,'escaped');g.hold(true);g.tick(.2);assert.equal(g.catches.length,0);assert.equal(g.answer(0),false);
+g=fresh();g.answer(g.options.indexOf(g.pair));g.hold(true);for(let i=0;i<200;i++)g.tick(.05);assert.equal(g.phase,'escaped');assert.match(g.reason,/糸/);
+g=fresh();g.answer(g.options.indexOf(g.pair));for(let i=0;i<500;i++)g.tick(.05);assert.equal(g.phase,'escaped');assert.match(g.reason,/逃げ/);
+g=fresh();g.answer(g.options.indexOf(g.pair));g.hold(true);g.pause(true);const t=g.elapsed;g.tick(.2);assert.equal(g.elapsed,t);assert.equal(g.held,false);g.pause(false);assert.equal(g.held,false);
+g=new FishingGame(pack,()=>.42);for(let round=0;round<5;round++){assert.equal(g.next(),true);assert.equal(g.round,round+1);g.answer(g.options.indexOf(g.pair));assert.equal(g.next(),false);for(let i=0;i<3000&&g.phase==='reel';i++){g.hold(!g.surge&&g.tension<65);g.tick(1/60);}assert.equal(g.phase,'caught','catch round '+round);assert.equal(g.catch.grade,'S');assert.ok(g.catch.points>0);const count=g.catches.length;g.tick(.1);assert.equal(g.catches.length,count);}g.next();assert.equal(g.phase,'done');assert.equal(g.catches.length,5);assert.equal(g.next(),false);
+console.log('PASS fishing: unique choices, wrong answer cannot catch, hold-only breaks line, idle escapes, pause freezes/releases, 5 skill-controlled catches incl final fish, terminal/double award guards.');

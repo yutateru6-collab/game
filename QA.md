@@ -83,3 +83,10 @@
 - Owner-only Site has a pinned read-only catalogue snapshot: 10 books / 16,300 entries. Public GitHub updates explicitly exclude dist/private-wordbooks/. Source wordaso never written. Not live synchronization.
 - All entries pass the expanded literal-preserving tab parser; Target1900 1–1900 checked. Existing English phrases/long meanings preserved. No claim of auditing book editions or translation correctness.
 - Connected-catalogue, picker, import, reward FX, input, hub, arcade, memory, bomb and tank journey simulations pass. Actual phone/browser rendering remains unverified.
+
+## Fishing addition (2026-09-27)
+- `node test-fishing.mjs`: wrong answers cannot hook, constant reeling breaks line, idling times out, pause freezes time and releases reel, five catches possible with tension management, end state protected.
+- `node test-hub.mjs`: six games plus random launch, compatible vocabulary filtering.
+- `node test-party-fx.mjs`: shared star rewards, deduplication and reduced-motion particle controls.
+- Mobile layout uses two-column choices, one hold button, pointer capture/cancel and background pause. Actual iPhone play and browser rendering remain unverified in this environment.
+- Reference: Fishing Star World Tour official publisher page https://fishingstar-wt.wfs.games/en/ and Nintendo listing https://www.nintendo.com/us/store/products/fishing-star-world-tour-switch/ (reeling, multiple locations, fish book). Original vocabulary/tension mechanics; no borrowed game art or code.

@@ -3,3 +3,5 @@
 .book-picker input,.book-picker select{font:inherit;font-size:16px;max-width:100%;width:100%;padding:10px;border:2px solid #b4cbe2;border-radius:10px;background:#f4f9ff;color:#183663;min-height:46px}.book-range{display:grid;grid-template-columns:1fr 1fr;gap:12px}.book-range label{min-width:0}.book-preview{white-space:pre-wrap;overflow-wrap:anywhere;background:#eef8ff;padding:12px;border-radius:12px}.book-picker .save-button{min-height:48px;border:0;border-radius:12px;padding:10px 16px;font-weight:800}.book-picker button:disabled{opacity:.45;cursor:default}
 
 .book-shortcut{display:block;width:100%;min-height:44px;border:2px solid white;border-radius:13px;background:#fff0a1;color:#3e4772;font:800 15px inherit;margin-top:12px;box-shadow:0 3px #966fa9}
+
+.fishing{--accent:#007985}.fishing-icon{position:absolute;font-size:clamp(65px,18vw,110px);inset:0;display:grid;place-items:center;filter:drop-shadow(0 5px 3px #17528777)}
