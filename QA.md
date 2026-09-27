@@ -62,3 +62,11 @@
 - `node test-maze-smooth.mjs`: identical movement distances at 30/60/120 Hz, immediate stop, corner entry, wall blocking, bomb escape, moving flame hit, enemy continuous positions, quiz freeze passed.
 - `node test-arcade.mjs`, `node test-input.mjs`, `node test-memory.mjs`, `node test-bomb.mjs` passed.
 - Browser preview was blocked by the browser URL policy in this environment. No real iPhone touch, visual layout, or on-device FPS verification is claimed. Browser testing was not bypassed.
+
+## Party island home (2026-09-27)
+- Rebuilt home as a two-column game selection screen, with six original 3D toy diorama menu images supplied by a single 1536×1024 sprite sheet. Menu imagery is decorative, not a claim of in-game 3D graphics.
+- Full-card native buttons, distinct genre labels, top vocabulary preview/edit shortcut, explicit save, and a random selector restricted to compatible games. Invalid game-specific word sets no longer overwrite stored words before validation.
+- Research: Nintendo official Jamboree site https://www.nintendo.com/jp/switch/a7hla/index.html (islands/genre-based presentation); W3C https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum/ (tap targets). These inform the design; no WCAG conformance claim.
+- `node test-hub.mjs`: five routes, editing/saving, malformed input, insufficient distinct meanings, eligible random routing, storage denial, all asset paths pass in a Node DOM adapter.
+- Asset inspected. Actual browser rendering, 200% text zoom, and iPhone touch checks remain unverified because the earlier preview browser URL policy block has not been bypassed.
+- Further candidates, not yet implemented: beginner practice mode without a timer; a three-game party course with a shared result; common review of missed words across all games. Prioritize practice before more game modes.
